@@ -219,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
                     MainActivity.this.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            TodoAdapter adapter = new TodoAdapter(MainActivity.this, todoListItems);
+                            TodoAdapter adapter = new TodoAdapter(MainActivity.this, token, todoListItems);
                             mainTodoList.setAdapter(adapter);
                             mainSwipeView.setRefreshing(false);
                         }
