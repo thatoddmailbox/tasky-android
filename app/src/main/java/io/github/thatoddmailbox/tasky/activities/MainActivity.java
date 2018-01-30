@@ -2,6 +2,7 @@ package io.github.thatoddmailbox.tasky.activities;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.AppCompatSpinner;
@@ -42,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.main_spinner)
     AppCompatSpinner mainSpinner;
 
+    @BindView(R.id.main_swipe_view)
+    SwipeRefreshLayout mainSwipeView;
+
     @BindView(R.id.main_todo_list)
     ListView mainTodoList;
 
@@ -63,6 +67,13 @@ public class MainActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowHomeEnabled(false);
 
         ButterKnife.bind(this);
+
+        mainSwipeView.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                loadCurrentList();
+            }
+        });
 
         handleActivityStart(false);
     }
@@ -158,6 +169,9 @@ public class MainActivity extends AppCompatActivity {
                                 @Override
                                 public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                                     currentListClass = todoLists.get(i);
+                                    if (mainTodoList.getAdapter() != null) {
+                                        ((TodoAdapter) mainTodoList.getAdapter()).clear();
+                                    }
                                     loadCurrentList();
                                 }
 
@@ -182,6 +196,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void loadCurrentList() {
+        mainSwipeView.setRefreshing(true);
         APIClient.get(token, "homework/getForClass/" + currentListClass.ID, new HashMap<String, String>(), new APICallback() {
             @Override
             public void onFailure(Call call, Exception e) {
@@ -206,6 +221,7 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
                             TodoAdapter adapter = new TodoAdapter(MainActivity.this, todoListItems);
                             mainTodoList.setAdapter(adapter);
+                            mainSwipeView.setRefreshing(false);
                         }
                     });
                 } catch (JSONException e) {
