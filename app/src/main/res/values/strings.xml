@@ -2,6 +2,7 @@
     <string name="app_name">Tasky</string>
 
     <string name="ok">OK</string>
+    <string name="loading">Loading, please wait...</string>
 
     <string name="error_generic_title">Connection error</string>
     <string name="error_no_connect_msg">There was a problem connecting to the MyHomeworkSpace servers.</string>
