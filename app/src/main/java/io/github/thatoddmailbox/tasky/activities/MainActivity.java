@@ -7,7 +7,10 @@ import android.os.Bundle;
 import android.support.v7.widget.AppCompatSpinner;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -22,9 +25,11 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.github.thatoddmailbox.tasky.AuthManager;
 import io.github.thatoddmailbox.tasky.R;
+import io.github.thatoddmailbox.tasky.adapters.TodoAdapter;
 import io.github.thatoddmailbox.tasky.adapters.TodoClassAdapter;
 import io.github.thatoddmailbox.tasky.api.APICallback;
 import io.github.thatoddmailbox.tasky.api.APIClient;
+import io.github.thatoddmailbox.tasky.data.Homework;
 import io.github.thatoddmailbox.tasky.data.MHSClass;
 import io.github.thatoddmailbox.tasky.data.User;
 import io.github.thatoddmailbox.tasky.misc.AlertUtils;
@@ -37,8 +42,14 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.main_spinner)
     AppCompatSpinner mainSpinner;
 
+    @BindView(R.id.main_todo_list)
+    ListView mainTodoList;
+
     User user;
     String token;
+    ArrayList<MHSClass> todoLists;
+    MHSClass currentListClass;
+    ArrayList<Homework> todoListItems;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,22 +138,74 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JSONArray classesJSONArray = o.getJSONArray("classes");
 
-                    final ArrayList<MHSClass> classItems = new ArrayList<MHSClass>();
+                    todoLists = new ArrayList<MHSClass>();
 
                     for (int i = 0; i < classesJSONArray.length(); i++) {
                         JSONObject classJSON = classesJSONArray.getJSONObject(i);
                         MHSClass classObj = MHSClass.fromJSON(classJSON);
                         if (classObj.isTodoClass()) {
-                            classItems.add(classObj);
+                            todoLists.add(classObj);
                         }
                     }
 
                     MainActivity.this.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            TodoClassAdapter adapter = new TodoClassAdapter(MainActivity.this, classItems);
+                            TodoClassAdapter adapter = new TodoClassAdapter(MainActivity.this, todoLists);
                             adapter.setDropDownViewResource(R.layout.item_dropdown_class);
                             mainSpinner.setAdapter(adapter);
+                            mainSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                                @Override
+                                public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                                    currentListClass = todoLists.get(i);
+                                    loadCurrentList();
+                                }
+
+                                @Override
+                                public void onNothingSelected(AdapterView<?> adapterView) {
+
+                                }
+                            });
+
+                            if (todoLists.size() > 0) {
+                                currentListClass = todoLists.get(0);
+                                loadCurrentList();
+                            }
+                        }
+                    });
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    AlertUtils.showConnectionFailureDialog(MainActivity.this, true);
+                }
+            }
+        });
+    }
+
+    void loadCurrentList() {
+        APIClient.get(token, "homework/getForClass/" + currentListClass.ID, new HashMap<String, String>(), new APICallback() {
+            @Override
+            public void onFailure(Call call, Exception e) {
+                AlertUtils.showConnectionFailureDialog(MainActivity.this, true);
+            }
+
+            @Override
+            public void onResponse(Call call, JSONObject o) {
+                try {
+                    JSONArray homeworkJSONArray = o.getJSONArray("homework");
+
+                    todoListItems = new ArrayList<Homework>();
+
+                    for (int i = 0; i < homeworkJSONArray.length(); i++) {
+                        JSONObject homeworkJSON = homeworkJSONArray.getJSONObject(i);
+                        Homework homeworkObj = Homework.fromJSON(homeworkJSON);
+                        todoListItems.add(homeworkObj);
+                    }
+
+                    MainActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            TodoAdapter adapter = new TodoAdapter(MainActivity.this, todoListItems);
+                            mainTodoList.setAdapter(adapter);
                         }
                     });
                 } catch (JSONException e) {
