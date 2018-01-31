@@ -79,7 +79,7 @@ public class TodoAdapter extends ArrayAdapter<Homework> {
 
                     @Override
                     public void onResponse(Call call, JSONObject o) {
-                        Log.i("adfs", "Qwer");
+
                     }
                 });
             }

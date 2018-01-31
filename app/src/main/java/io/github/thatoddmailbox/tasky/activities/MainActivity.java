@@ -1,8 +1,11 @@
 package io.github.thatoddmailbox.tasky.activities;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.AppCompatSpinner;
@@ -20,7 +23,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -34,6 +39,8 @@ import io.github.thatoddmailbox.tasky.data.Homework;
 import io.github.thatoddmailbox.tasky.data.MHSClass;
 import io.github.thatoddmailbox.tasky.data.User;
 import io.github.thatoddmailbox.tasky.misc.AlertUtils;
+import io.github.thatoddmailbox.tasky.misc.TextPromptDialog;
+import io.github.thatoddmailbox.tasky.misc.TextPromptOnEnterListener;
 import okhttp3.Call;
 
 public class MainActivity extends AppCompatActivity {
@@ -48,6 +55,9 @@ public class MainActivity extends AppCompatActivity {
 
     @BindView(R.id.main_todo_list)
     ListView mainTodoList;
+
+    @BindView(R.id.main_fab)
+    FloatingActionButton mainFab;
 
     User user;
     String token;
@@ -75,6 +85,55 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mainFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final AlertDialog itemDialog = TextPromptDialog.build(MainActivity.this, "Add item to list", "", "Something to do", new TextPromptOnEnterListener() {
+                    @Override
+                    public void onEnter(String text, DialogInterface dialog, int id) {
+                        Calendar calendar = Calendar.getInstance();
+                        String dueString = "";
+                        dueString = String.format(Locale.US, "%1$tY-%1$tm-%1$td", calendar);
+
+                        HashMap<String, String> homeworkParams = new HashMap<String, String>();
+
+                        homeworkParams.put("name", text);
+                        homeworkParams.put("due", dueString);
+                        homeworkParams.put("desc", "");
+                        homeworkParams.put("complete", "0");
+                        homeworkParams.put("classId", Integer.toString(currentListClass.ID));
+
+                        final ProgressDialog progressDialog = ProgressDialog.show(MainActivity.this, "", getString(R.string.loading));
+                        APIClient.post(token, "homework/add", homeworkParams, new APICallback() {
+                            @Override
+                            public void onFailure(Call call, Exception e) {
+                                MainActivity.this.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        progressDialog.dismiss();
+                                        AlertUtils.showConnectionFailureDialog(MainActivity.this, false);
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onResponse(Call call, JSONObject o) {
+                                MainActivity.this.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        progressDialog.dismiss();
+                                        Toast.makeText(MainActivity.this, R.string.success_added, Toast.LENGTH_SHORT).show();
+                                        loadCurrentList();
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }, null);
+                itemDialog.show();
+            }
+        });
+
         handleActivityStart(false);
     }
 
@@ -99,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             progressDialog.dismiss();
-                            AlertUtils.showConnectionFailureDialog(MainActivity.this,true);
+                            AlertUtils.showConnectionFailureDialog(MainActivity.this, true);
                         }
                     });
                 }
