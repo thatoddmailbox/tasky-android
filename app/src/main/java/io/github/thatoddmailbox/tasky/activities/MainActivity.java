@@ -1,9 +1,12 @@
 package io.github.thatoddmailbox.tasky.activities;
 
+import android.app.ActionBar;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.TabLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -50,6 +53,9 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.main_spinner)
     AppCompatSpinner mainSpinner;
 
+    @BindView(R.id.main_tabs)
+    TabLayout mainTabs;
+
     @BindView(R.id.main_swipe_view)
     SwipeRefreshLayout mainSwipeView;
 
@@ -77,6 +83,29 @@ public class MainActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowHomeEnabled(false);
 
         ButterKnife.bind(this);
+
+        mainTabs.setTabTextColors(Color.rgb(160, 160, 160), Color.WHITE);
+
+        mainTabs.addTab(mainTabs.newTab().setTag(false).setText("Uncompleted"));
+        mainTabs.addTab(mainTabs.newTab().setTag(true).setText("All"));
+
+        mainTabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                Boolean showAll = (Boolean) tab.getTag();
+                ((TodoAdapter)mainTodoList.getAdapter()).getFilter().filter(showAll ? "" : "uncompleted");
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+                // don't care
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+                onTabSelected(tab);
+            }
+        });
 
         mainSwipeView.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -281,6 +310,7 @@ public class MainActivity extends AppCompatActivity {
                             TodoAdapter adapter = new TodoAdapter(MainActivity.this, token, todoListItems);
                             mainTodoList.setAdapter(adapter);
                             mainSwipeView.setRefreshing(false);
+                            mainTabs.getTabAt(mainTabs.getSelectedTabPosition()).select();
                         }
                     });
                 } catch (JSONException e) {

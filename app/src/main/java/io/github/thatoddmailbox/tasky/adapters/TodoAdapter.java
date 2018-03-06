@@ -10,6 +10,8 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,6 +19,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import io.github.thatoddmailbox.tasky.R;
 import io.github.thatoddmailbox.tasky.api.APICallback;
@@ -26,12 +29,14 @@ import io.github.thatoddmailbox.tasky.data.MHSClass;
 import io.github.thatoddmailbox.tasky.misc.AlertUtils;
 import okhttp3.Call;
 
-public class TodoAdapter extends ArrayAdapter<Homework> {
+public class TodoAdapter extends ArrayAdapter<Homework> implements Filterable {
     private String _token;
+    private final List<Homework> _items;
 
     public TodoAdapter(Context context, String token, ArrayList<Homework> homework) {
         super(context, 0, homework);
         _token = token;
+        _items = (List<Homework>)homework.clone();
     }
 
     @Override
@@ -87,6 +92,52 @@ public class TodoAdapter extends ArrayAdapter<Homework> {
         });
 
         return convertView;
+    }
+
+    @Override
+    public Filter getFilter() {
+
+        Filter filter = new Filter() {
+
+            @SuppressWarnings("unchecked")
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                if (results.count > 0) {
+                    clear();
+                    addAll((ArrayList<Homework>) results.values);
+                    notifyDataSetChanged();
+                } else {
+                    notifyDataSetInvalidated();
+                }
+            }
+
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+
+                FilterResults results = new FilterResults();
+                ArrayList<Homework> filteredHomeworkItems = new ArrayList<Homework>();
+
+                boolean showAll = (constraint.length() == 0);
+
+                for (int i = 0; i < _items.size(); i++) {
+                    Homework homeworkObj = _items.get(i);
+                    if (showAll) {
+                        filteredHomeworkItems.add(homeworkObj);
+                    } else {
+                        if (!homeworkObj.Complete) {
+                            filteredHomeworkItems.add(homeworkObj);
+                        }
+                    }
+                }
+
+                results.count = filteredHomeworkItems.size();
+                results.values = filteredHomeworkItems;
+
+                return results;
+            }
+        };
+
+        return filter;
     }
 
     public void setCheckedMode(View itemView, boolean checked) {
