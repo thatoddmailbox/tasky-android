@@ -48,19 +48,20 @@ public class TodoAdapter extends ArrayAdapter<Homework> {
         name.setText(homeworkObj.Name);
         setCheckedMode(convertView, homeworkObj.Complete);
 
-        convertView.setTag(homeworkObj);
-
-        done.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        done.setTag(homeworkObj);
+        done.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                View itemView = (View) compoundButton.getParent().getParent();
-                Homework itemHomework = (Homework) itemView.getTag();
+            public void onClick(View view) {
+                CheckBox checkbox = (CheckBox) view;
 
-                itemHomework.Complete = checked;
+                View itemView = (View) checkbox.getParent().getParent();
+                Homework itemHomework = (Homework) checkbox.getTag();
 
-                itemView.setTag(itemHomework);
+                itemHomework.Complete = checkbox.isChecked();
 
-                setCheckedMode(itemView, checked);
+                view.setTag(itemHomework);
+
+                setCheckedMode(itemView, checkbox.isChecked());
 
                 HashMap<String, String> homeworkParams = new HashMap<String, String>();
 
