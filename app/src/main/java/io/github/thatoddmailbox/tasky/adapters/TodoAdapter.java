@@ -47,10 +47,9 @@ public class TodoAdapter extends ArrayAdapter<Homework> implements Filterable {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_todo, parent, false);
         }
 
-        TextView name = (TextView) convertView.findViewById(R.id.item_todo_name);
         CheckBox done = (CheckBox) convertView.findViewById(R.id.item_todo_done);
 
-        name.setText(homeworkObj.Name);
+        done.setText(homeworkObj.Name);
         setCheckedMode(convertView, homeworkObj.Complete);
 
         done.setTag(homeworkObj);
@@ -141,17 +140,16 @@ public class TodoAdapter extends ArrayAdapter<Homework> implements Filterable {
     }
 
     public void setCheckedMode(View itemView, boolean checked) {
-        TextView name = (TextView) itemView.findViewById(R.id.item_todo_name);
         CheckBox done = (CheckBox) itemView.findViewById(R.id.item_todo_done);
 
         done.setChecked(checked);
 
         if (checked) {
-            name.setTypeface(null, Typeface.ITALIC);
-            name.setPaintFlags(name.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+            done.setTypeface(null, Typeface.ITALIC);
+            done.setPaintFlags(done.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
         } else {
-            name.setTypeface(null, Typeface.NORMAL);
-            name.setPaintFlags(name.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+            done.setTypeface(null, Typeface.NORMAL);
+            done.setPaintFlags(done.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
         }
     }
 }
