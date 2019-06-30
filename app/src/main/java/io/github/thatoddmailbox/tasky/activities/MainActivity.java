@@ -13,6 +13,7 @@ import android.os.Bundle;
 import androidx.appcompat.widget.AppCompatSpinner;
 import androidx.appcompat.widget.Toolbar;
 
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -81,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
 
         ButterKnife.bind(this);
 
-        mainTabs.setTabTextColors(Color.rgb(160, 160, 160), Color.WHITE);
+        mainTabs.setTabTextColors(Color.rgb(200, 200, 200), Color.WHITE);
 
         mainTabs.addTab(mainTabs.newTab().setTag(false).setText("Uncompleted"));
         mainTabs.addTab(mainTabs.newTab().setTag(true).setText("All"));
