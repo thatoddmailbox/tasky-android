@@ -1,6 +1,6 @@
 package io.github.thatoddmailbox.tasky.misc;
 
-import android.app.Activity;
+import android.content.Context;
 import android.content.DialogInterface;
 import androidx.appcompat.app.AlertDialog;
 import android.view.LayoutInflater;
@@ -11,23 +11,26 @@ import android.widget.TextView;
 import io.github.thatoddmailbox.tasky.R;
 
 public class TextPromptDialog {
-    public static AlertDialog build(Activity a, String title, String text, String placeholder, final TextPromptOnEnterListener onEnter, final DialogInterface.OnClickListener onCancel) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(a);
+    public static AlertDialog build(Context ctx, String title, String description, String placeholder, String currentText, final TextPromptOnEnterListener onEnter, final DialogInterface.OnClickListener onCancel) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(ctx);
 
-        LayoutInflater inflater = a.getLayoutInflater();
+        LayoutInflater inflater = LayoutInflater.from(ctx);
         View dialogView = inflater.inflate(R.layout.dialog_text_prompt, null);
 
         final TextView infoView = (TextView)dialogView.findViewById(R.id.text_prompt_info);
         final EditText inputText = (EditText)dialogView.findViewById(R.id.text_prompt_input);
 
-        if (text.equals("")) {
+        if (description.isEmpty()) {
             infoView.setVisibility(View.GONE);
         } else {
             infoView.setVisibility(View.VISIBLE);
         }
 
-        infoView.setText(text);
+        infoView.setText(description);
         inputText.setHint(placeholder);
+        if (!currentText.isEmpty()) {
+            inputText.setText(currentText);
+        }
         inputText.requestFocus();
 
         builder.setView(dialogView);

@@ -3,17 +3,16 @@ package io.github.thatoddmailbox.tasky.adapters;
 import android.content.Context;
 import android.graphics.Paint;
 import android.graphics.Typeface;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.Filter;
 import android.widget.Filterable;
-import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
 
 import org.json.JSONObject;
 
@@ -22,21 +21,23 @@ import java.util.HashMap;
 import java.util.List;
 
 import io.github.thatoddmailbox.tasky.R;
+import io.github.thatoddmailbox.tasky.activities.MainActivity;
 import io.github.thatoddmailbox.tasky.api.APICallback;
 import io.github.thatoddmailbox.tasky.api.APIClient;
 import io.github.thatoddmailbox.tasky.data.Homework;
-import io.github.thatoddmailbox.tasky.data.MHSClass;
-import io.github.thatoddmailbox.tasky.misc.AlertUtils;
+import io.github.thatoddmailbox.tasky.misc.ItemOptionsDialog;
 import okhttp3.Call;
 
 public class TodoAdapter extends ArrayAdapter<Homework> implements Filterable {
     private String _token;
     private final List<Homework> _items;
+    private final MainActivity _mainActivity;
 
-    public TodoAdapter(Context context, String token, ArrayList<Homework> homework) {
-        super(context, 0, homework);
+    public TodoAdapter(MainActivity mainActivity, String token, ArrayList<Homework> homework) {
+        super(mainActivity, 0, homework);
         _token = token;
         _items = (List<Homework>)homework.clone();
+        _mainActivity = mainActivity;
     }
 
     @Override
@@ -47,23 +48,17 @@ public class TodoAdapter extends ArrayAdapter<Homework> implements Filterable {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_todo, parent, false);
         }
 
-        CheckBox done = (CheckBox) convertView.findViewById(R.id.item_todo_done);
-
-        done.setText(homeworkObj.Name);
-        setCheckedMode(convertView, homeworkObj.Complete);
-
-        done.setTag(homeworkObj);
-        done.setOnClickListener(new View.OnClickListener() {
+        convertView.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                CheckBox checkbox = (CheckBox) view;
+            public void onClick(View itemView) {
+                CheckBox checkbox = (CheckBox) ((ViewGroup) itemView).getChildAt(0);
 
-                View itemView = (View) checkbox.getParent();
-                Homework itemHomework = (Homework) checkbox.getTag();
+                Homework itemHomework = (Homework) itemView.getTag();
 
-                itemHomework.Complete = checkbox.isChecked();
+                itemHomework.Complete = !itemHomework.Complete;;
 
-                view.setTag(itemHomework);
+                itemView.setTag(itemHomework);
+                checkbox.setChecked(itemHomework.Complete);
 
                 setCheckedMode(itemView, checkbox.isChecked());
 
@@ -89,6 +84,24 @@ public class TodoAdapter extends ArrayAdapter<Homework> implements Filterable {
                 });
             }
         });
+        convertView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                Homework homework = (Homework) view.getTag();
+
+                final AlertDialog dialog = ItemOptionsDialog.build(_token, getContext(), homework, _mainActivity);
+                dialog.show();
+
+                return true;
+            }
+        });
+
+        convertView.setTag(homeworkObj);
+
+        CheckBox done = (CheckBox) convertView.findViewById(R.id.item_todo_done);
+
+        done.setText(homeworkObj.Name);
+        setCheckedMode(convertView, homeworkObj.Complete);
 
         return convertView;
     }

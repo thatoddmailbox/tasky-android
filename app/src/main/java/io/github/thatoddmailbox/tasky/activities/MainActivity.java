@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
         mainFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final AlertDialog itemDialog = TextPromptDialog.build(MainActivity.this, "Add item to list", "", "Something to do", new TextPromptOnEnterListener() {
+                final AlertDialog itemDialog = TextPromptDialog.build(MainActivity.this, "Add item to list", "", "Something to do", "", new TextPromptOnEnterListener() {
                     @Override
                     public void onEnter(String text, DialogInterface dialog, int id) {
                         Calendar calendar = Calendar.getInstance();
@@ -281,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    void loadCurrentList() {
+    public void loadCurrentList() {
         mainSwipeView.setRefreshing(true);
         APIClient.get(token, "homework/getForClass/" + currentListClass.ID, new HashMap<String, String>(), new APICallback() {
             @Override
