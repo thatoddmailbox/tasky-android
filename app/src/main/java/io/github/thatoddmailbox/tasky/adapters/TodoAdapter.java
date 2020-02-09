@@ -58,7 +58,7 @@ public class TodoAdapter extends ArrayAdapter<Homework> implements Filterable {
             public void onClick(View view) {
                 CheckBox checkbox = (CheckBox) view;
 
-                View itemView = (View) checkbox.getParent().getParent();
+                View itemView = (View) checkbox.getParent();
                 Homework itemHomework = (Homework) checkbox.getTag();
 
                 itemHomework.Complete = checkbox.isChecked();
