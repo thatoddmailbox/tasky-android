@@ -5,11 +5,24 @@ import androidx.appcompat.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONObject;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 
 import io.github.thatoddmailbox.tasky.R;
 import io.github.thatoddmailbox.tasky.activities.MainActivity;
@@ -58,21 +71,44 @@ public class ItemOptionsDialog {
     }
 
     public static AlertDialog build(final String token, final Context ctx, final Homework item, final MainActivity mainActivity) {
-        String[] options = {
-                "Edit",
-        };
-
         AlertDialog.Builder builder = new AlertDialog.Builder(ctx);
         builder.setTitle(item.Name);
-        builder.setItems(options, new DialogInterface.OnClickListener() {
+
+        View content = LayoutInflater.from(ctx).inflate(R.layout.dialog_item_options, null);
+
+        // details
+        TextView details = content.findViewById(R.id.item_details);
+        final DateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+        final DateFormat localFormat = DateFormat.getDateInstance(DateFormat.LONG, Locale.getDefault());
+        String dueText = "(could not parse)";
+        try {
+            Date parsedDate = isoFormat.parse(item.Due);
+            if (parsedDate != null) {
+                dueText = localFormat.format(parsedDate);
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        details.setText(String.format(ctx.getString(R.string.added_on), dueText));
+
+        // options
+        final ArrayAdapter<String> optionAdapter = new ArrayAdapter<String>(ctx, R.layout.item_option, new String[] {
+            "Edit"
+        });
+        final ListView options = content.findViewById(R.id.item_options);
+        options.setAdapter(optionAdapter);
+        options.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
+            public void onItemClick(AdapterView<?> adapterView, View view, int which, long id) {
                 if (which == 0) {
                     // Edit
                     ItemOptionsDialog.editItem(token, ctx, item, mainActivity);
                 }
             }
         });
+
+        builder.setView(content);
+
         return builder.create();
     }
 }
