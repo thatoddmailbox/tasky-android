@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/tasky-android.iml" filepath="$PROJECT_DIR$/tasky-android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" group="tasky-android/app" />
+      <module fileurl="file://$PROJECT_DIR$/tasky-android.iml" filepath="$PROJECT_DIR$/tasky-android.iml" group="tasky-android" />
     </modules>
   </component>
 </project>
