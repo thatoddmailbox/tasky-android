@@ -14,6 +14,9 @@ import androidx.appcompat.widget.AppCompatSpinner;
 import androidx.appcompat.widget.Toolbar;
 
 import android.util.TypedValue;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -162,6 +165,59 @@ public class MainActivity extends AppCompatActivity {
         });
 
         handleActivityStart(false);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_add_list:
+                TextPromptDialog.build(this, "Add list", "", "New list name", "", new TextPromptOnEnterListener() {
+                    @Override
+                    public void onEnter(String text, DialogInterface dialog, int id) {
+                        HashMap<String, String> classParams = new HashMap<String, String>();
+
+                        classParams.put("name", "To-do (" + text + ")");
+                        classParams.put("color", "40ccff");
+                        classParams.put("teacher", "");
+
+                        final ProgressDialog progressDialog = ProgressDialog.show(MainActivity.this, "", getString(R.string.loading));
+                        APIClient.post(token, "classes/add", classParams, new APICallback() {
+                            @Override
+                            public void onFailure(Call call, Exception e) {
+                                MainActivity.this.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        progressDialog.dismiss();
+                                        AlertUtils.showConnectionFailureDialog(MainActivity.this, false);
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onResponse(Call call, JSONObject o) {
+                                MainActivity.this.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        progressDialog.dismiss();
+                                        Toast.makeText(MainActivity.this, R.string.success_added_list, Toast.LENGTH_SHORT).show();
+                                        fetchLists();
+                                    }
+                                });
+                            }
+                        });
+                    }
+                }, null).show();
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override
