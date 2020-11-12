@@ -32,12 +32,34 @@ import io.github.thatoddmailbox.tasky.data.Homework;
 import okhttp3.Call;
 
 public class ItemOptionsDialog {
-    private static void editItem(final String token, final Context ctx, final Homework item, final MainActivity mainActivity) {
-        final AlertDialog dialog = TextPromptDialog.build(ctx, "Edit item", "", "Something to do", item.Name, new TextPromptOnEnterListener() {
+    private static void makePOSTRequest(final String token, final Context ctx, String path, HashMap<String, String> params, final AlertDialog parentDialog, final MainActivity mainActivity) {
+        final ProgressDialog progressDialog = ProgressDialog.show(ctx, "", ctx.getString(R.string.loading));
+
+        APIClient.post(token, path, params, new APICallback() {
+            @Override
+            public void onFailure(Call call, Exception e) {
+                progressDialog.dismiss();
+                Toast.makeText(ctx, R.string.error_generic_title, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onResponse(Call call, JSONObject o) {
+                progressDialog.dismiss();
+                mainActivity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mainActivity.loadCurrentList();
+                        parentDialog.dismiss();
+                    }
+                });
+            }
+        });
+
+    }
+    private static void editItem(final String token, final Context ctx, final Homework item, final AlertDialog parentDialog, final MainActivity mainActivity) {
+        final AlertDialog textPrompt = TextPromptDialog.build(ctx, "Edit item", "", "Something to do", item.Name, new TextPromptOnEnterListener() {
             @Override
             public void onEnter(String text, DialogInterface dialog, int id) {
-                final ProgressDialog progressDialog = ProgressDialog.show(ctx, "", ctx.getString(R.string.loading));
-
                 HashMap<String, String> homeworkParams = new HashMap<String, String>();
 
                 homeworkParams.put("id", Integer.toString(item.ID));
@@ -47,27 +69,28 @@ public class ItemOptionsDialog {
                 homeworkParams.put("complete", (item.Complete ? "1" : "0"));
                 homeworkParams.put("classId", Integer.toString(item.ClassID));
 
-                APIClient.post(token, "homework/edit", homeworkParams, new APICallback() {
-                    @Override
-                    public void onFailure(Call call, Exception e) {
-                        progressDialog.dismiss();
-                        Toast.makeText(ctx, R.string.error_generic_title, Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onResponse(Call call, JSONObject o) {
-                        progressDialog.dismiss();
-                        mainActivity.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                mainActivity.loadCurrentList();
-                            }
-                        });
-                    }
-                });
+                makePOSTRequest(token, ctx, "homework/edit", homeworkParams, parentDialog, mainActivity);
             }
         }, null);
-        dialog.show();
+        textPrompt.show();
+    }
+
+    private static void deleteItem(final String token, final Context ctx, final Homework item, final AlertDialog parentDialog, final MainActivity mainActivity) {
+        AlertDialog confirmation = new AlertDialog.Builder(ctx)
+                .setTitle("Are you sure?")
+                .setMessage("This will delete '" + item.Name + "'.")
+                .setNegativeButton(android.R.string.no, null)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        HashMap<String, String> params = new HashMap<String, String>();
+                        params.put("id", Integer.toString(item.ID));
+                        makePOSTRequest(token, ctx, "homework/delete", params, parentDialog, mainActivity);
+                    }
+                })
+                .create();
+
+        confirmation.show();
     }
 
     public static AlertDialog build(final String token, final Context ctx, final Homework item, final MainActivity mainActivity) {
@@ -93,22 +116,29 @@ public class ItemOptionsDialog {
 
         // options
         final ArrayAdapter<String> optionAdapter = new ArrayAdapter<String>(ctx, R.layout.item_option, new String[] {
-            "Edit"
+            "Edit",
+            "Delete"
         });
         final ListView options = content.findViewById(R.id.item_options);
         options.setAdapter(optionAdapter);
+
+        builder.setView(content);
+
+        final AlertDialog dialog = builder.create();
+
         options.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int which, long id) {
                 if (which == 0) {
                     // Edit
-                    ItemOptionsDialog.editItem(token, ctx, item, mainActivity);
+                    ItemOptionsDialog.editItem(token, ctx, item, dialog, mainActivity);
+                } else if (which == 1) {
+                    // Delete
+                    ItemOptionsDialog.deleteItem(token, ctx, item, dialog, mainActivity);
                 }
             }
         });
 
-        builder.setView(content);
-
-        return builder.create();
+        return dialog;
     }
 }
